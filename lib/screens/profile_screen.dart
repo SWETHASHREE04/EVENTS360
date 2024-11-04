@@ -1,26 +1,11 @@
-import 'calender_screen.dart';
-import 'popular_events.dart';
-import 'myevents.dart';
-import 'explore_screen.dart';
-import 'login_screen.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart'; // Import for kIsWeb
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
-void main() => runApp(const MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: ProfileScreen(),
-    );
-  }
-}
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -63,6 +48,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickImage() async {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+      // Show an alert if the platform is unsupported for image upload
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Platform Unsupported"),
+          content:
+              const Text("Image upload is only supported on Android and iOS."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
@@ -83,9 +87,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final downloadUrl = await storageRef.getDownloadURL();
 
       setState(() {
-        _profileImageUrl = downloadUrl; // Update UI with new profile image URL
+        _profileImageUrl = downloadUrl;
       });
-      print('Profile image uploaded and URL updated: $_profileImageUrl');
+      print('Profile image uploaded: $_profileImageUrl');
     } catch (e) {
       print('Failed to upload image: $e');
     }
@@ -180,7 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 20),
             TextFormField(
-              initialValue: '********', // Masked password placeholder
+              initialValue: '********',
               decoration: InputDecoration(
                 labelText: 'PASSWORD',
                 filled: true,
@@ -224,57 +228,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 4,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'My Events',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Calendar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CalendarScreen()),
-            );
-          } else if (index == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const PopularEventsPage()),
-            );
-          } else if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MyEventsPage()),
-            );
-          } else if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ExplorePage()),
-            );
-          }
-        },
       ),
     );
   }
