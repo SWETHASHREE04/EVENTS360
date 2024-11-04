@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'calender_screen.dart';
 import 'profile_screen.dart';
@@ -5,13 +7,15 @@ import 'explore_screen.dart';
 import 'popular_events.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MyEventsPage(),
     );
@@ -19,6 +23,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyEventsPage extends StatefulWidget {
+  const MyEventsPage({super.key});
+
   @override
   _MyEventsPageState createState() => _MyEventsPageState();
 }
@@ -35,28 +41,28 @@ class _MyEventsPageState extends State<MyEventsPage> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                CalendarScreen()), // Navigate to the CalendarScreen
+                const CalendarScreen()), // Navigate to the CalendarScreen
       );
     } else if (index == 0) {
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
-                PopularEventsPage()), // Navigate to the Profile page
+                const PopularEventsPage()), // Navigate to the Profile page
       );
     } else if (index == 3) {
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
-                ExplorePage()), // Navigate to the Profile page
+                const ExplorePage()), // Navigate to the Profile page
       );
     } else if (index == 4) {
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
-                ProfileScreen()), // Navigate to the Profile page
+                const ProfileScreen()), // Navigate to the Profile page
       );
     }
     else {
@@ -72,9 +78,9 @@ class _MyEventsPageState extends State<MyEventsPage> {
       context: context,
       builder: (BuildContext context) {
         return Container(
-          margin: EdgeInsets.all(16.0),
-          padding: EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             boxShadow: [
@@ -115,12 +121,12 @@ class _MyEventsPageState extends State<MyEventsPage> {
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // Close the bottom sheet
                 },
-                child: Text('Close'),
+                child: const Text('Close'),
               ),
             ],
           ),
@@ -140,9 +146,9 @@ class _MyEventsPageState extends State<MyEventsPage> {
                 : Icons.radio_button_unchecked, // Active or inactive state
             color: isActive ? Colors.green : Colors.grey,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Padding(
-            padding: EdgeInsets.only(bottom: 30), // Adjust padding as needed
+            padding: const EdgeInsets.only(bottom: 30), // Adjust padding as needed
             child: Text(
               text,
               style: TextStyle(
@@ -162,9 +168,9 @@ class _MyEventsPageState extends State<MyEventsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFF6F61),
+      backgroundColor: const Color(0xFFFF6F61),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'My Events',
           style: TextStyle(
             fontSize: 24,
@@ -176,7 +182,7 @@ class _MyEventsPageState extends State<MyEventsPage> {
         elevation: 1,
         actions: [
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.notifications,
               color: Colors.black,
             ),
@@ -188,7 +194,7 @@ class _MyEventsPageState extends State<MyEventsPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: SingleChildScrollView(
           child: GridView.count(
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             crossAxisCount: 2,
             crossAxisSpacing: 16.0,
@@ -244,7 +250,7 @@ class _MyEventsPageState extends State<MyEventsPage> {
                 title: 'My Events',
                 date: 'Coming Soon',
                 description: 'Stay tuned for upcoming events.',
-                imageWidget: Icon(Icons.event, size: 100),
+                imageWidget: const Icon(Icons.event, size: 100),
                 backgroundColor: Colors.pink[100]!,
                 onTap: () => _showStatus('Status: Coming Soon'),
               ),
@@ -293,7 +299,7 @@ class EventCard extends StatelessWidget {
   final Color backgroundColor;
   final VoidCallback onTap;
 
-  EventCard({
+  const EventCard({super.key, 
     required this.title,
     required this.date,
     required this.description,
@@ -313,7 +319,7 @@ class EventCard extends StatelessWidget {
           color: backgroundColor,
           borderRadius: BorderRadius.circular(16),
         ),
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           minHeight: 120,
         ),
         child: Column(
@@ -322,29 +328,29 @@ class EventCard extends StatelessWidget {
             Row(
               children: [
                 imageWidget,
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         date,
-                        style: TextStyle(color: Colors.grey),
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               description,
               maxLines: 2,
@@ -355,7 +361,7 @@ class EventCard extends StatelessWidget {
                 alignment: Alignment.bottomRight,
                 child: Text(
                   daysRemaining!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.redAccent,
                   ),

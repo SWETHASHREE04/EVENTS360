@@ -1,11 +1,53 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // Import the ResetPasswordScreen here
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'login_screen.dart'; // Import the LoginScreen
 
-
-
-
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
+
+  @override
+  _SignUpScreenState createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _auth = FirebaseAuth.instance; // Firebase Authentication instance
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Method to handle user sign-up
+  Future<void> _signUp() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password')),
+      );
+      return;
+    }
+
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      // Navigate to another screen or show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User signed up successfully!')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => LoginScreen()), // Redirect to login
+      );
+    } catch (e) {
+      // Handle errors, such as invalid email or weak password
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign-up failed: ${e.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +71,7 @@ class SignUpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             TextField(
+              controller: _emailController, // Email controller
               decoration: InputDecoration(
                 hintText: 'Email',
                 filled: true,
@@ -41,6 +84,7 @@ class SignUpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             TextField(
+              controller: _passwordController, // Password controller
               obscureText: true,
               decoration: InputDecoration(
                 hintText: 'Password',
@@ -54,7 +98,7 @@ class SignUpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: _signUp, // Call the sign-up function
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 15),
@@ -63,7 +107,7 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
               child: const Text(
-                'SIGN IN',
+                'SIGN UP',
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.white,
@@ -72,11 +116,12 @@ class SignUpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             OutlinedButton(
-              onPressed: ()
-              {Navigator.push(
+              onPressed: () {
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );},
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
@@ -93,12 +138,16 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
             ),
-           
           ],
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 }
-
-

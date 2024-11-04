@@ -2,10 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'popular_events.dart'; // Import other screens you want to navigate to
-import 'profile_screen.dart'; // Import other screens you want to navigate to
-import 'explore_screen.dart'; // Import other screens you want to navigate to
-import 'myevents.dart'; // Import other screens you want to navigate to
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'popular_events.dart';
+import 'profile_screen.dart';
+import 'explore_screen.dart';
+import 'myevents.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -18,11 +19,46 @@ class _CalendarScreenState extends State<CalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  Map<DateTime, List<Map<String, dynamic>>> _events = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEvents();
+  }
+
+  Future<void> _fetchEvents() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('calendar_events').get();
+
+    // Parse events and group by date
+    final events = <DateTime, List<Map<String, dynamic>>>{};
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final dateString = data['date'] as String;
+      final eventDate = DateTime.parse(dateString); // Parse string to DateTime
+      final eventDay = DateTime(eventDate.year, eventDate.month, eventDate.day);
+
+      if (events[eventDay] == null) {
+        events[eventDay] = [];
+      }
+      events[eventDay]!.add(data);
+    }
+
+    setState(() {
+      _events = events;
+    });
+  }
+
+  List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
+    final eventDay = DateTime(day.year, day.month, day.day);
+    return _events[eventDay] ?? [];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFF6B6B), // Light red color background
+      backgroundColor: const Color(0xFFFF6B6B),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF6B6B),
         elevation: 0,
@@ -37,9 +73,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Handle notification press
-            },
+            onPressed: () {},
           )
         ],
       ),
@@ -54,6 +88,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             selectedDayPredicate: (day) {
               return isSameDay(_selectedDay, day);
             },
+            eventLoader: _getEventsForDay,
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 _selectedDay = selectedDay;
@@ -70,20 +105,45 @@ class _CalendarScreenState extends State<CalendarScreen> {
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
             },
+            calendarStyle: const CalendarStyle(
+              markerDecoration: BoxDecoration(
+                color: Colors.orange,
+                shape: BoxShape.circle,
+              ),
+              todayDecoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+              ),
+              selectedDecoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
           const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Any Event?',
-                style: TextStyle(
+                'Events on ${_selectedDay != null ? _selectedDay!.toLocal().toString().split(' ')[0] : 'Selected Date'}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              children:
+                  _getEventsForDay(_selectedDay ?? DateTime.now()).map((event) {
+                return ListTile(
+                  title: Text(event['title'] ?? 'No Title'),
+                  subtitle: Text(event['description'] ?? 'No Description'),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -92,7 +152,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         currentIndex: 2,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
-        // Set the selected index as the calendar page
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -120,37 +179,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) =>
-                      PopularEventsPage()), // Navigate to the Home page
-            );
-          } /*else if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MyEventsScreen()), // Navigate to the My Events page
-            );
-          } else if (index == 2) {
-            // Stay on the current calendar page
-          } */
-          else if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      ExplorePage()), // Navigate to the Explore page
+                  builder: (context) => const PopularEventsPage()),
             );
           } else if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      MyEventsPage()), // Navigate to the Explore page
+              MaterialPageRoute(builder: (context) => const MyEventsPage()),
+            );
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ExplorePage()),
             );
           } else if (index == 4) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      ProfileScreen()), // Navigate to the Profile page
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           }
         },

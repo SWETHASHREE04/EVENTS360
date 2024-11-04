@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,13 +29,15 @@ class ExploreEventsTable extends StatelessWidget {
     {"email": "votaradi213@rku.ac.in", "password": "viajy123"},
   ];
 
+  ExploreEventsTable({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFF6F61),
+      backgroundColor: const Color(0xFFFF6F61),
       appBar: AppBar(
-        title: Text('User Table'),
-        backgroundColor: Color(0xFFFF6F61),
+        title: const Text('User Table'),
+        backgroundColor: const Color(0xFFFF6F61),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -52,7 +56,7 @@ class ExploreEventsTable extends StatelessWidget {
               ],
             ),
             child: DataTable(
-              columns: [
+              columns: const [
                 DataColumn(label: Text('Email')),
                 DataColumn(label: Text('Password')),
               ],
@@ -61,7 +65,7 @@ class ExploreEventsTable extends StatelessWidget {
                     (user) => DataRow(
                       cells: [
                         DataCell(Text(user["email"]!)),
-                        DataCell(Text(user["password"]!)),
+                        DataCell(Text(user["password"]!)), // Consider removing this in production
                       ],
                     ),
                   )

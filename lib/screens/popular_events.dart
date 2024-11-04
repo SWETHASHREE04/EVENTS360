@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'calender_screen.dart';
 import 'profile_screen.dart';
 import 'myevents.dart';
 import 'explore_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: PopularEventsPage(),
     );
@@ -19,6 +22,8 @@ class MyApp extends StatelessWidget {
 }
 
 class PopularEventsPage extends StatefulWidget {
+  const PopularEventsPage({super.key});
+
   @override
   _PopularEventsPageState createState() => _PopularEventsPageState();
 }
@@ -26,45 +31,28 @@ class PopularEventsPage extends StatefulWidget {
 class _PopularEventsPageState extends State<PopularEventsPage> {
   int _selectedIndex = 0;
 
-  // List of widget pages to navigate to
-
-  // Method to handle tap on BottomNavigationBarItem
   void _onItemTapped(int index) {
     if (index == 2) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                CalendarScreen()), // Navigate to the CalendarScreen
+        MaterialPageRoute(builder: (context) => const CalendarScreen()),
       );
     } else if (index == 1) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                MyEventsPage()), // Navigate to the Profile page
+        MaterialPageRoute(builder: (context) => const MyEventsPage()),
       );
     } else if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                ExplorePage()), // Navigate to the Profile page
+        MaterialPageRoute(builder: (context) => const ExplorePage()),
       );
     } else if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                ProfileScreen()), // Navigate to the Profile page
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
-    } /* else if (index == 4) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileScreen()), // Navigate to the Profile page
-            );
-    }*/
-    else {
+    } else {
       setState(() {
         _selectedIndex = index;
       });
@@ -74,9 +62,9 @@ class _PopularEventsPageState extends State<PopularEventsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFF6F61),
+      backgroundColor: const Color(0xFFFF6F61),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Popular Events',
           style: TextStyle(
             fontSize: 24,
@@ -88,7 +76,7 @@ class _PopularEventsPageState extends State<PopularEventsPage> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.notifications,
               color: Colors.black,
             ),
@@ -98,56 +86,44 @@ class _PopularEventsPageState extends State<PopularEventsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SingleChildScrollView(
-          child: GridView.count(
-            physics: NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            crossAxisCount: 2,
-            crossAxisSpacing: 16.0,
-            mainAxisSpacing: 16.0,
-            childAspectRatio: 2,
-            children: [
-              EventCard(
-                title: 'Enhance your Business skills',
-                date: '20 July',
-                description: 'Participate in Food Fest, Art exhibition, etc.',
-                daysRemaining: '2 Days',
-                imageWidget: Image.network(
-                  'https://cdn.shopify.com/s/files/1/0840/8370/3830/articles/1603898293-shutterstock598993493.jpg?v=1714646550',
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.cover,
-                ),
-                backgroundColor: Colors.orange[100]!,
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('events').snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text("No events available."));
+            }
+
+            final events = snapshot.data!.docs;
+
+            return GridView.builder(
+              itemCount: events.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                childAspectRatio: 2,
               ),
-              EventCard(
-                title: 'Nature Photography',
-                date: '12 June',
-                description:
-                    'Submit photos of campus nature for a chance to win.',
-                imageWidget: Image.network(
-                  'https://cdn.pixabay.com/photo/2017/09/01/13/56/university-2704306_640.jpg',
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.cover,
-                ),
-                backgroundColor: Colors.lightBlue[100]!,
-              ),
-              EventCard(
-                title: 'Unsaid Events',
-                date: '20 July',
-                description:
-                    'Musical events for hidden talents. Register to showcase your own talent.',
-                imageWidget: Image.network(
-                  'https://images.pexels.com/photos/976866/pexels-photo-976866.jpeg?cs=srgb&dl=pexels-joshsorenson-976866.jpg&fm=jpg',
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.cover,
-                ),
-                backgroundColor: Colors.green[100]!,
-              ),
-            ],
-          ),
+              itemBuilder: (context, index) {
+                var event = events[index].data() as Map<String, dynamic>;
+                return EventCard(
+                  title: event['title'] ?? 'No Title',
+                  date: event['date'] ?? 'No Date',
+                  description: event['description'] ?? 'No Description',
+                  daysRemaining: event['daysRemaining'],
+                  imageWidget: Image.network(
+                    event['imageUrl'] ?? 'https://via.placeholder.com/150',
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.cover,
+                  ),
+                  backgroundColor: Colors.orange[100]!,
+                );
+              },
+            );
+          },
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -190,7 +166,8 @@ class EventCard extends StatelessWidget {
   final Widget imageWidget;
   final Color backgroundColor;
 
-  EventCard({
+  const EventCard({
+    super.key,
     required this.title,
     required this.date,
     required this.description,
@@ -207,38 +184,36 @@ class EventCard extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
       ),
-      constraints: BoxConstraints(
-        minHeight: 120,
-      ),
+      constraints: const BoxConstraints(minHeight: 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               imageWidget,
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       date,
-                      style: TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             description,
             maxLines: 2,
@@ -249,7 +224,7 @@ class EventCard extends StatelessWidget {
               alignment: Alignment.bottomRight,
               child: Text(
                 daysRemaining!,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.redAccent,
                 ),

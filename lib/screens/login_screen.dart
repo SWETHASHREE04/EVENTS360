@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'reset_password.dart'; // Import the ResetPasswordScreen here
-import 'signup.dart';
-import 'popular_events.dart';
-// Import the PopularEventsPage here
-import 'admin_main.dart'; // Import the AdminFormPage here
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'reset_password.dart'; // Import ResetPasswordScreen
+import 'signup.dart'; // Import SignUpScreen
+import 'popular_events.dart'; // Import PopularEventsPage
+import 'admin_main.dart'; // Import AdminFormPage
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,46 +13,68 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth instance
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  // Method to handle login with Firebase
+  Future<void> _login() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorDialog('Please fill in both fields.');
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (userCredential.user != null) {
+        // Direct users to specific pages based on their email (for example, admin users)
+        if (email == 'admin@rku.ac.in') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()), // Admin Page
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => PopularEventsPage()), // Regular User Page
+          );
+        }
+      }
+    } catch (e) {
+      _showErrorDialog('Login failed');
+    }
+  }
+
+  // Show an error dialog
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _login() {
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    if (email == 'ssharma289@rku.ac.in' && password == 'swetha123') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => PopularEventsPage()),
-      );
-    } else if (email == 'admin@rku.ac.in' && password == 'admin123') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else {
-      // Show an error message if credentials are incorrect
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Invalid Credentials'),
-          content: Text('Please enter valid email and password.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   @override
@@ -77,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 30),
             TextField(
-              controller: _emailController, // Use the controller for email
+              controller: _emailController, // Email controller
               decoration: InputDecoration(
                 hintText: 'Email',
                 filled: true,
@@ -90,8 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller:
-                  _passwordController, // Use the controller for password
+              controller: _passwordController, // Password controller
               obscureText: true,
               decoration: InputDecoration(
                 hintText: 'Password',
@@ -105,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _login, // Call the _login method on press
+              onPressed: _login, // Call the _login method
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 15),
@@ -126,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SignUpScreen()),
+                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -148,11 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {
-                // Navigate to ResetPasswordScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => ResetPasswordScreen()),
+                      builder: (context) => const ResetPasswordScreen()),
                 );
               },
               child: const Text(
