@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
-import 'login_screen.dart'; // Import the LoginScreen
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -10,11 +11,11 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _auth = FirebaseAuth.instance; // Firebase Authentication instance
+  final _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Method to handle user sign-up
+  // Method to handle user sign-up and store data in Firestore
   Future<void> _signUp() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -27,22 +28,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
+      // Create user with email and password in Firebase Auth
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      // Navigate to another screen or show success message
+
+      // Store user info in Firestore with the user's unique UID
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'email': email,
+        'uid': userCredential.user!.uid,
+        // You could add more fields here if necessary
+      });
+
+      // Show success message and navigate to login screen
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User signed up successfully!')),
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) => LoginScreen()), // Redirect to login
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } catch (e) {
-      // Handle errors, such as invalid email or weak password
+      // Handle any errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sign-up failed: ${e.toString()}')),
       );
@@ -71,7 +83,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(height: 30),
             TextField(
-              controller: _emailController, // Email controller
+              controller: _emailController,
               decoration: InputDecoration(
                 hintText: 'Email',
                 filled: true,
@@ -84,7 +96,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(height: 20),
             TextField(
-              controller: _passwordController, // Password controller
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 hintText: 'Password',
@@ -98,7 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _signUp, // Call the sign-up function
+              onPressed: _signUp,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 15),
