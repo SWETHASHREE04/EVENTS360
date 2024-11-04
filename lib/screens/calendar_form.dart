@@ -1,12 +1,16 @@
+// ignore_for_file: library_private_types_in_public_api, depend_on_referenced_packages
+
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For restricting input
 import 'package:intl/intl.dart'; // For date formatting
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,12 +19,14 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: CalendarForm(),
+      home: const CalendarForm(),
     );
   }
 }
 
 class CalendarForm extends StatefulWidget {
+  const CalendarForm({super.key});
+
   @override
   _CalendarFormState createState() => _CalendarFormState();
 }
@@ -42,18 +48,31 @@ class _CalendarFormState extends State<CalendarForm> {
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Here you would call your database API to save the data
-      print('Form Submitted');
-      print('Title: $_title');
-      print('Description: $_description');
-      print('Date: $_date');
 
-      // Reset the form after submission
-      _formKey.currentState!.reset();
-      _dateController.clear();
+      try {
+        // Save the data to Firestore
+        await FirebaseFirestore.instance.collection('calendar_events').add({
+          'title': _title,
+          'description': _description,
+          'date': _date?.toIso8601String(),
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event Added Successfully!')),
+        );
+
+        // Reset the form after submission
+        _formKey.currentState!.reset();
+        _dateController.clear();
+      } catch (e) {
+        print('Error adding event: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to add event')),
+        );
+      }
     }
   }
 
@@ -75,10 +94,10 @@ class _CalendarFormState extends State<CalendarForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFF6F61), // Set outer background color
+      backgroundColor: const Color(0xFFFF6F61), // Set outer background color
       appBar: AppBar(
-        title: Text('Calendar Events'),
-        backgroundColor: Color(0xFFFF6F61), // Set outer background color
+        title: const Text('Calendar Events'),
+        backgroundColor: const Color(0xFFFF6F61), // Set outer background color
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -86,7 +105,8 @@ class _CalendarFormState extends State<CalendarForm> {
           child: Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: Colors.white, // Set the background color of the form to white
+              color:
+                  Colors.white, // Set the background color of the form to white
               borderRadius: BorderRadius.circular(10.0), // Rounded corners
               boxShadow: [
                 BoxShadow(
@@ -99,10 +119,11 @@ class _CalendarFormState extends State<CalendarForm> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Ensure the container only takes necessary space
+                mainAxisSize: MainAxisSize
+                    .min, // Ensure the container only takes necessary space
                 children: [
                   TextFormField(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Title',
                       border: OutlineInputBorder(),
                     ),
@@ -116,9 +137,9 @@ class _CalendarFormState extends State<CalendarForm> {
                       _title = value;
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   TextFormField(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Description',
                       border: OutlineInputBorder(),
                     ),
@@ -133,10 +154,10 @@ class _CalendarFormState extends State<CalendarForm> {
                       _description = value;
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _dateController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Date',
                       border: OutlineInputBorder(),
                       suffixIcon: Icon(Icons.calendar_today),
@@ -150,14 +171,15 @@ class _CalendarFormState extends State<CalendarForm> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _submitForm,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
-                      minimumSize: Size(200, 50), // Button size as per Figma
+                      minimumSize:
+                          const Size(200, 50), // Button size as per Figma
                     ),
-                    child: Text('ADD'),
+                    child: const Text('ADD'),
                   ),
                 ],
               ),
