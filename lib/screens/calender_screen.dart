@@ -70,12 +70,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
             fontSize: 24,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
-          )
-        ],
       ),
       body: Column(
         children: [
