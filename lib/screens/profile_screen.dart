@@ -126,16 +126,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.grid_view, color: Colors.black),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
