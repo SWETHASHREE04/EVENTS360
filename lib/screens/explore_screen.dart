@@ -32,25 +32,47 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   int _selectedIndex = 3;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   void _onItemTapped(int index) {
     if (index == 2) {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const CalendarScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CalendarScreen()),
+      );
     } else if (index == 0) {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const PopularEventsPage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const PopularEventsPage()),
+      );
     } else if (index == 4) {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+      );
     } else if (index == 1) {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const MyEventsPage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MyEventsPage()),
+      );
     } else {
       setState(() {
         _selectedIndex = index;
       });
     }
+  }
+
+  void _updateSearchQuery(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,12 +90,7 @@ class _ExplorePageState extends State<ExplorePage> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
+        
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -85,6 +102,8 @@ class _ExplorePageState extends State<ExplorePage> {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: _searchController,
+                      onChanged: _updateSearchQuery,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
@@ -119,7 +138,17 @@ class _ExplorePageState extends State<ExplorePage> {
                     return const Center(child: Text("No events available."));
                   }
 
-                  final events = snapshot.data!.docs;
+                  // Filter events based on search query
+                  final events = snapshot.data!.docs.where((doc) {
+                    var event = doc.data() as Map<String, dynamic>;
+                    var title = (event['title'] ?? '').toString().toLowerCase();
+                    return title.contains(_searchQuery.toLowerCase());
+                  }).toList();
+
+                  if (events.isEmpty) {
+                    return const Center(
+                        child: Text("No matching events found."));
+                  }
 
                   return GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
