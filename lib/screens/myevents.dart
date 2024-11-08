@@ -180,15 +180,6 @@ class _MyEventsPageState extends State<MyEventsPage> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 1,
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications,
-              color: Colors.black,
-            ),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
