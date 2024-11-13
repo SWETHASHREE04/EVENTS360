@@ -5,6 +5,10 @@ import 'calender_screen.dart';
 import 'profile_screen.dart';
 import 'explore_screen.dart';
 import 'popular_events.dart';
+import 'payment.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'retrieve.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,145 +36,40 @@ class MyEventsPage extends StatefulWidget {
 class _MyEventsPageState extends State<MyEventsPage> {
   int _selectedIndex = 1;
 
-  // List of widget pages to navigate to
-
-  // Method to handle tap on BottomNavigationBarItem
   void _onItemTapped(int index) {
     if (index == 2) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                const CalendarScreen()), // Navigate to the CalendarScreen
+        MaterialPageRoute(builder: (context) => const CalendarScreen()),
       );
     } else if (index == 0) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                const PopularEventsPage()), // Navigate to the Profile page
+        MaterialPageRoute(builder: (context) => const PopularEventsPage()),
       );
     } else if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                const ExplorePage()), // Navigate to the Profile page
+        MaterialPageRoute(builder: (context) => const ExplorePage()),
       );
     } else if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                const ProfileScreen()), // Navigate to the Profile page
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
       );
-    }
-    else {
+    } else {
       setState(() {
         _selectedIndex = index;
       });
     }
   }
 
-  // Method to show status widget as a bottom sheet with vertical steps
-  void _showStatus(String status) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          margin: const EdgeInsets.all(16.0),
-          padding: const EdgeInsets.all(16.0),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Stack to align the vertical line with the items
-              Stack(
-                children: [
-                  Positioned(
-                    left: 16,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 2, // Width of the vertical line
-                      color: Colors.black, // Color of the line
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 32,
-                      bottom: 10,
-                    ), // Padding to push the content right
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildStatusItem("Register", true),
-                        _buildStatusItem("Pay the Charges", false),
-                        _buildStatusItem("Confirmed", false),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the bottom sheet
-                },
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStatusItem(String text, bool isActive) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(
-            isActive
-                ? Icons.check_circle
-                : Icons.radio_button_unchecked, // Active or inactive state
-            color: isActive ? Colors.green : Colors.grey,
-          ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 30), // Adjust padding as needed
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isActive
-                    ? Colors.black
-                    : Colors.grey, // Change color based on status
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFF6F61),
+      backgroundColor: Color(0xFFFF6F61),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'My Events',
           style: TextStyle(
             fontSize: 24,
@@ -185,7 +84,7 @@ class _MyEventsPageState extends State<MyEventsPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: SingleChildScrollView(
           child: GridView.count(
-            physics: const NeverScrollableScrollPhysics(),
+            physics: NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             crossAxisCount: 2,
             crossAxisSpacing: 16.0,
@@ -204,8 +103,15 @@ class _MyEventsPageState extends State<MyEventsPage> {
                   fit: BoxFit.cover,
                 ),
                 backgroundColor: Colors.orange[100]!,
-                onTap: () => _showStatus(
-                    'Status: Register > Pay the Charges > Confirmed'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventRegistrationForm(
+                      eventTitle: 'Enhance your Business skills',
+                      isPaymentRequired: true,
+                    ),
+                  ),
+                ),
               ),
               EventCard(
                 title: 'Nature Photography',
@@ -219,8 +125,15 @@ class _MyEventsPageState extends State<MyEventsPage> {
                   fit: BoxFit.cover,
                 ),
                 backgroundColor: Colors.lightBlue[100]!,
-                onTap: () => _showStatus(
-                    'Status: Register > Submit Photos > Winner Announcement'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventRegistrationForm(
+                      eventTitle: 'Nature Photography',
+                      isPaymentRequired: false,
+                    ),
+                  ),
+                ),
               ),
               EventCard(
                 title: 'Unsaid Events',
@@ -234,16 +147,31 @@ class _MyEventsPageState extends State<MyEventsPage> {
                   fit: BoxFit.cover,
                 ),
                 backgroundColor: Colors.green[100]!,
-                onTap: () => _showStatus(
-                    'Status: Register > Audition > Final Performance'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventRegistrationForm(
+                      eventTitle: 'Unsaid Events',
+                      isPaymentRequired: false,
+                    ),
+                  ),
+                ),
               ),
               EventCard(
                 title: 'My Events',
                 date: 'Coming Soon',
                 description: 'Stay tuned for upcoming events.',
-                imageWidget: const Icon(Icons.event, size: 100),
+                imageWidget: Icon(Icons.event, size: 100),
                 backgroundColor: Colors.pink[100]!,
-                onTap: () => _showStatus('Status: Coming Soon'),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventRegistrationForm(
+                      eventTitle: 'My Events',
+                      isPaymentRequired: false,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -290,7 +218,7 @@ class EventCard extends StatelessWidget {
   final Color backgroundColor;
   final VoidCallback onTap;
 
-  const EventCard({super.key, 
+  EventCard({
     required this.title,
     required this.date,
     required this.description,
@@ -310,55 +238,178 @@ class EventCard extends StatelessWidget {
           color: backgroundColor,
           borderRadius: BorderRadius.circular(16),
         ),
-        constraints: const BoxConstraints(
-          minHeight: 120,
-        ),
+        constraints: BoxConstraints(minHeight: 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                imageWidget,
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        date,
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+            imageWidget,
+            SizedBox(height: 8),
             Text(
-              description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              title,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+            Text(
+              date,
+              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            ),
+            Text(description, style: TextStyle(fontSize: 14)),
             if (daysRemaining != null)
-              Align(
-                alignment: Alignment.bottomRight,
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  daysRemaining!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
-                  ),
+                  '$daysRemaining remaining',
+                  style: TextStyle(fontSize: 14, color: Colors.red),
                 ),
               ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: onTap,
+              child: Text('Register'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class EventRegistrationForm extends StatefulWidget {
+  final String eventTitle;
+  final bool isPaymentRequired;
+
+  EventRegistrationForm({
+    required this.eventTitle,
+    required this.isPaymentRequired,
+  });
+
+  @override
+  _EventRegistrationFormState createState() => _EventRegistrationFormState();
+}
+
+class _EventRegistrationFormState extends State<EventRegistrationForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _enrollmentController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  bool isEmailValid(String email) {
+    return email.endsWith('@rku.ac.in');
+  }
+
+  bool isPhoneValid(String phone) {
+    return RegExp(r'^[0-9]{10}$').hasMatch(phone);
+  }
+
+  Future<void> handleSubmit() async {
+    if (_formKey.currentState!.validate()) {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Store registration data temporarily
+      await prefs.setString('eventTitle', widget.eventTitle);
+      await prefs.setString('name', _nameController.text);
+      await prefs.setString('email', _emailController.text);
+      await prefs.setString('enrollment', _enrollmentController.text);
+      await prefs.setString('phone', _phoneController.text);
+
+      // Firestore collection for storing registrations
+      final registrationsCollection =
+          FirebaseFirestore.instance.collection('registrations');
+
+      // Create a new document in Firestore for this registration
+      await registrationsCollection.add({
+        'eventTitle': widget.eventTitle,
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'enrollment': _enrollmentController.text,
+        'phone': _phoneController.text,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      if (widget.isPaymentRequired) {
+        // Pass the required arguments to PaymentPage
+        final bool? paymentSuccess = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentPage(
+              eventTitle: widget.eventTitle,
+              email: _emailController.text,
+              phone: _phoneController.text,
+            ),
+          ),
+        );
+        // Navigate to payment if needed
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Registered successfully!")),
+        );
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _enrollmentController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('Register for ${widget.eventTitle}'),
+        backgroundColor: Color(0xFFFF6F61),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Full Name'),
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter your full name' : null,
+              ),
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'University Email'),
+                validator: (value) => !isEmailValid(value ?? '')
+                    ? 'Invalid university email'
+                    : null,
+              ),
+              TextFormField(
+                controller: _enrollmentController,
+                decoration: InputDecoration(labelText: 'Enrollment Number'),
+                validator: (value) => value!.isEmpty
+                    ? 'Please enter your enrollment number'
+                    : null,
+              ),
+              TextFormField(
+                controller: _phoneController,
+                decoration: InputDecoration(labelText: 'Phone Number'),
+                keyboardType: TextInputType.phone,
+                validator: (value) =>
+                    !isPhoneValid(value ?? '') ? 'Invalid phone number' : null,
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: handleSubmit,
+                child: Text('Submit'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFFF6F61),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
