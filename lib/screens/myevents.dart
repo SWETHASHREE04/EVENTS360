@@ -340,6 +340,15 @@ class _EventRegistrationFormState extends State<EventRegistrationForm> {
             ),
           ),
         );
+        if (paymentSuccess == true) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => RegistrationSuccessScreen()),
+          );
+        } else {
+          _showPaymentError();
+        }
         // Navigate to payment if needed
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -348,6 +357,22 @@ class _EventRegistrationFormState extends State<EventRegistrationForm> {
         Navigator.pop(context);
       }
     }
+  }
+
+  void _showPaymentError() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Payment Cancelled/Failed"),
+        content: Text("Payment was unsuccessful. Please try again."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
